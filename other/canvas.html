@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>drawCanvasLineChart</title>
+  </head>
+  <body>
+    <button>点击发送请求</button>
+    <canvas width="590" height="340">
+    <script src="../d3.v5.js"></script>
+    <script>
+      const btn = document.getElementsByTagName("button")[0];
+      btn.onclick = function () {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "http://127.0.0.1:3007/showCanvasLineChart");
+        xhr.send();
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              let data = JSON.parse(xhr.response);
+              console.log(data); // 响应体
+              drawCanvasLineChart();
+            }
+          } else {
+          }
+
+          async function drawCanvasLineChart() {
+            var canvas = document.querySelector("canvas"),
+				context = canvas.getContext("2d");
+
+            const dataset = await d3.json(
+              "http://127.0.0.1:3007/showCanvasLineChart"
+            );
+            //console.log(dataset)
+
+            var parseTime = d3.timeParse("%Y-%m-%d");
+            const xAccessor = (d) => parseTime(d.date);
+            const yAccessor = (d) => d.Open;
+
+			var margin = {
+					top: 10,
+					right: 30,
+					bottom: 30,
+					left: 60
+				},
+				width = canvas.width - margin.left - margin.right,
+				height = canvas.height - margin.top - margin.bottom;
+            context.translate(margin.left, margin.top);
+            
+			var x = d3.scaleTime()
+                .domain(d3.extent(dataset,xAccessor))
+				.range([0, width])
+
+			var y = d3.scaleLinear()
+                .domain(d3.extent(dataset,yAccessor))
+				.range([height, 0])
+
+            xAxis();
+			yAxis();
+
+			var line = d3.line()
+				// .x(function(d) {
+				// 	//return x(d.date);
+                //     return d[0]
+				// })
+				// .y(function(d) {
+				// 	//return y(d.Open);
+                //     return d[1]
+				// })
+                .x((d) => x(xAccessor(d)))
+                .y((d) => y(yAccessor(d)))
+				.curve(d3.curveStep)
+				.context(context)
+                (dataset)
+
+				
+				//context.beginPath();
+				//line(dataset);
+				context.lineWidth = 1.5;
+				context.strokeStyle = "#000000";
+				context.stroke();
+
+			function xAxis() {
+				var tickCount = 10,
+					tickSize = 6,
+					ticks = x.ticks(tickCount),
+					tickFormat = x.tickFormat(tickCount,'%Y');
+				
+				//横向刻度
+				context.beginPath();
+				ticks.forEach(function(d) {
+					context.moveTo(x(d), height);
+					context.lineTo(x(d), height + tickSize);
+				});
+				context.strokeStyle = "black";
+				context.stroke();
+				
+				//横线 
+				context.beginPath();
+				context.moveTo(1, height+tickSize);
+				context.lineTo(1, height);
+				context.lineTo(width, height);
+				context.lineTo(width, height+tickSize);
+				context.strokeStyle = "black";
+				context.stroke();
+				
+				//刻度值
+				context.textAlign = "center";
+				context.textBaseline = "top";
+				ticks.forEach(function(d) {
+					context.fillText(tickFormat(d), x(d), height + tickSize);
+				});
+			}
+
+			function yAxis() {
+				var tickCount = 10,
+					tickSize = 6,
+					tickPadding = 3,
+					ticks = y.ticks(tickCount),
+					tickFormat = y.tickFormat(tickCount,'.1f');
+
+				//纵向刻度
+				context.beginPath();
+				ticks.forEach(function(d) {
+					context.moveTo(0, y(d));
+					context.lineTo(-6, y(d));
+				});
+				context.strokeStyle = "black";
+				context.stroke();
+
+				//竖线 
+				context.beginPath();
+				context.moveTo(-tickSize, 0);
+				context.lineTo(0.5, 0);
+				context.lineTo(0.5, height);
+				context.lineTo(-tickSize, height);
+				context.strokeStyle = "black";
+				context.stroke();
+
+			//刻度值
+				context.textAlign = "right";
+				context.textBaseline = "middle";
+				ticks.forEach(function(d) {
+					context.fillText(tickFormat(d), -tickSize - tickPadding, y(d));
+				});
+				
+				//刻度单位
+				context.save();
+				context.rotate(-Math.PI / 2);
+				context.textAlign = "right";
+				context.textBaseline = "top";
+				context.font = "bold 10px sans-serif";
+				context.fillText("Price (US$)", -10, 10);
+				context.restore();
+          }
+        
+        }
+        };
+      };
+    </script>
+  </body>
+</html>
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>drawCanvasLineChart</title>
+  </head>
+  <body>
+    <button>点击发送请求</button>
+    <canvas width="960" height="500">
+    <script src="../d3.v5.js"></script>
+    <script>
+      const btn = document.getElementsByTagName("button")[0];
+      btn.onclick = function () {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "http://127.0.0.1:3007/showCanvasLineChart");
+        xhr.send();
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              let data = JSON.parse(xhr.response);
+              console.log(data); // 响应体
+              drawCanvasLineChart();
+            }
+          } else {
+          }
+
+          async function drawCanvasLineChart() {
+            var canvas = document.querySelector("canvas"),
+				context = canvas.getContext("2d");
+
+			var margin = {
+					top: 10,
+					right: 30,
+					bottom: 30,
+					left: 60
+				},
+				width = canvas.width - margin.left - margin.right,
+				height = canvas.height - margin.top - margin.bottom;
+
+			var parseTime = d3.timeParse("%Y-%m-%d");
+			
+			var x = d3.scaleTime()
+				.range([0, width]);
+
+			var y = d3.scaleLinear()
+				.range([height, 0]);
+
+			var line = d3.line()
+				.x(function(d) {
+					return x(d.date);
+				})
+				.y(function(d) {
+					return y(d.Open);
+				})
+				.curve(d3.curveStep)
+				.context(context);
+
+			context.translate(margin.left, margin.top);
+
+			await d3.json("./canvas.json", function(d) {
+				console.log(d);
+				d.date = parseTime(d.date);
+				d.Open = +d.Open;
+				return d;
+			}).then(function(data) {
+				x.domain(d3.extent(data, function(d) {
+					return d.date;
+				}));
+				y.domain(d3.extent(data, function(d) {
+					return d.Open;
+				}));
+
+				xAxis();
+				yAxis();
+
+				context.beginPath();
+				line(data);
+				context.lineWidth = 1.5;
+				context.strokeStyle = "steelblue";
+				context.stroke();
+			});
+
+			function xAxis() {
+				var tickCount = 10,
+					tickSize = 6,
+					ticks = x.ticks(tickCount),
+					tickFormat = x.tickFormat(tickCount,'%Y-%m-%d');
+				
+				//横向刻度
+				context.beginPath();
+				ticks.forEach(function(d) {
+					context.moveTo(x(d), height);
+					context.lineTo(x(d), height + tickSize);
+				});
+				context.strokeStyle = "black";
+				context.stroke();
+				
+				//横线 
+				context.beginPath();
+				context.moveTo(1, height+tickSize);
+				context.lineTo(1, height);
+				context.lineTo(width, height);
+				context.lineTo(width, height+tickSize);
+				context.strokeStyle = "black";
+				context.stroke();
+				
+				//刻度值
+				context.textAlign = "center";
+				context.textBaseline = "top";
+				ticks.forEach(function(d) {
+					context.fillText(tickFormat(d), x(d), height + tickSize);
+				});
+			}
+
+			function yAxis() {
+				var tickCount = 10,
+					tickSize = 6,
+					tickPadding = 3,
+					ticks = y.ticks(tickCount),
+					tickFormat = y.tickFormat(tickCount,'.1f');
+
+				//纵向刻度
+				context.beginPath();
+				ticks.forEach(function(d) {
+					context.moveTo(0, y(d));
+					context.lineTo(-6, y(d));
+				});
+				context.strokeStyle = "black";
+				context.stroke();
+
+				//竖线 
+				context.beginPath();
+				context.moveTo(-tickSize, 0);
+				context.lineTo(0.5, 0);
+				context.lineTo(0.5, height);
+				context.lineTo(-tickSize, height);
+				context.strokeStyle = "black";
+				context.stroke();
+
+			//刻度值
+				context.textAlign = "right";
+				context.textBaseline = "middle";
+				ticks.forEach(function(d) {
+					context.fillText(tickFormat(d), -tickSize - tickPadding, y(d));
+				});
+				
+				//刻度单位
+				context.save();
+				context.rotate(-Math.PI / 2);
+				context.textAlign = "right";
+				context.textBaseline = "top";
+				context.font = "bold 10px sans-serif";
+				context.fillText("Price (US$)", -10, 10);
+				context.restore();
+          }
+        
+        }
+        };
+      };
+    </script>
+  </body>
+</html> -->

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=chrome" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>drawLineChart2</title>
+  </head>
+  <body>
+    <div id="wrapper"></div>
+    <script src="../d3.v5.js"></script>
+    <script src="./js/getLineChart2.js"></script>
+    <script>
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", "http://127.0.0.1:3007/showLineChart2");
+      xhr.send();
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            let data = JSON.parse(xhr.response);
+            console.log(data); // 响应体
+            drawLineChart();
+          }
+        } else {
+        }
+      };
+    </script>
+  </body>
+</html>

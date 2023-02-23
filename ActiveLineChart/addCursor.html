@@ -1,0 +1,323 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>drawLineChart</title>
+  </head>
+  <body>
+    <button>点击发送请求</button>
+    <div id="wrapper"></div>
+    <script src="../d3.v5.js"></script>
+    <script>
+      const btn = document.getElementsByTagName("button")[0];
+      btn.onclick = function () {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "http://127.0.0.1:3007/showLineChart2");
+        xhr.send();
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              let data = JSON.parse(xhr.response);
+              console.log(data); // 响应体
+              drawLineChart();
+            }
+          } else {
+          }
+
+          async function drawLineChart() {
+            const dataset = await d3.json(
+              "http://127.0.0.1:3007/showLineChart2"
+            );
+            // Access data
+            const dateFormatString = "%Y-%m-%d";
+            const dateParser = d3.timeParse(dateFormatString);
+            const xAccessor = (d) => dateParser(d.date);
+            const yAccessor = (d) => d.Open;
+
+            let dimensions = {
+              //590,440
+              width: 590,
+              height: 440,
+              margin: {
+                top: 10,
+                right: 30,
+                bottom: 30,
+                left: 60,
+              },
+            };
+            dimensions.boundedWidth =
+              dimensions.width -
+              dimensions.margin.left -
+              dimensions.margin.right;
+            dimensions.boundedHeight =
+              dimensions.height -
+              dimensions.margin.top -
+              dimensions.margin.bottom;
+
+            // Draw
+            const wrapper = d3
+              .select("#wrapper")
+              .append("svg")
+              .attr("width", dimensions.width)
+              .attr("height", dimensions.height);
+
+            // We can draw our chart inside of a "g" element and shift it all at once using the CSS transform property
+            const bounds = wrapper
+              .append("g") // Think of "g" as the "div" equivalent within an SVG element
+              .style(
+                "transform",
+                `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px)`
+              );
+
+            // Create our scales
+            const yScale = d3
+              .scaleLinear()
+              .domain(d3.extent(dataset, yAccessor)) // d3.extent returns an array with the min and max value
+              .range([dimensions.boundedHeight, 0]); // range refers to the highest and lowest numbers to display
+
+            const xScale = d3
+              .scaleTime()
+              .domain(d3.extent(dataset, xAccessor)) // Use a time scale since we are working with date objects
+              .range([0, dimensions.boundedWidth]);
+
+            // This allows to find the closest X index of the mouse:
+            var bisect = d3.bisector(function (d) {
+              return d.Open;
+            }).left;
+
+            // Create the circle that travels along the curve of chart
+            var focus = bounds
+              .append("g")
+              .append("circle")
+              .style("fill", "none")
+              .attr("stroke", "black")
+              .attr("r", 8.5)
+              .style("opacity", 0);
+
+            // Create the text that travels along the curve of chart
+            var focusText = bounds
+              .append("g")
+              .append("text")
+              .style("opacity", 0)
+              .attr("text-anchor", "left")
+              .attr("alignment-baseline", "middle");
+
+            const lineGenerator = d3
+              .line() // Creates a generator that converts data points into a d string
+              // Transform our data point with the appropriate accessor and the scale to get the scaled value in pixel space
+              .x((d) => xScale(xAccessor(d)))
+              .y((d) => yScale(yAccessor(d)));
+
+            const line = bounds
+              .append("path")
+              // Feed our dataset to our line generator function
+              .attr("d", lineGenerator(dataset))
+              // SVG elements default to a black fill and no stroke; which gives us a filled in shape unless we add styling
+              .attr("fill", "none")
+              .attr("stroke", "#000000")
+              //.attr("stroke-linejoin", "round")
+              //.attr("stroke-linecap", "round")
+              .attr("stroke-width", 1.5);
+
+            // Draw y axis tick marks and labels
+            const yAxisGenerator = d3
+              .axisLeft() // We want labels of the y-axis to be to the left of the axis line
+              .scale(yScale);
+            // Our axis generator will create lots of element; create a g element to contain them and keep our DOM organized
+            const yAxis = bounds.append("g").call(yAxisGenerator);
+
+            // Draw x axis tick marks and labels
+            const xAxisGenerator = d3
+              .axisBottom() // We want our labels of the x-axis to appear under the axis line
+              .scale(xScale);
+            const xAxis = bounds
+              .append("g")
+              .call(xAxisGenerator)
+              // If you stop here, the xAxisGenerator knows how to display tick marks and labels relative to the axis line, but we need to move it to the bottom with a CSS transform
+              .style("transform", `translateY(${dimensions.boundedHeight}px)`);
+
+            // Create a rect on top of the svg area: this rectangle recovers mouse position
+            bounds
+              .append("rect")
+              .style("fill", "none")
+              .style("pointer-events", "all")
+              .attr("width", dimensions.boundedWidth)
+              .attr("height", dimensions.boundedHeight)
+              .on("mouseover", mouseover)
+              .on("mousemove", mousemove)
+              .on("mouseout", mouseout);
+
+            // What happens when the mouse move -> show the annotations at the right positions.
+            function mouseover() {
+              focus.style("opacity", 1);
+              focusText.style("opacity", 1);
+            }
+
+            function mousemove() {
+              // recover coordinate we need
+              var x0 = xScale.invert(d3.mouse(this)[0]);
+              var i = bisect(dataset, x0, 1);
+              selectedData = dataset[i];
+              focus
+                .attr("cx", xScale(selectedData.date))
+                .attr("cy", yScale(selectedData.Open));
+              focusText
+                .html(
+                  "x:" + selectedData.date + "  -  " + "y:" + selectedData.Open
+                )
+                .attr("x", xScale(selectedData.date) + 15)
+                .attr("y", yScale(selectedData.Open));
+            }
+            function mouseout() {
+              focus.style("opacity", 0);
+              focusText.style("opacity", 0);
+            }
+          }
+        };
+      };
+    </script>
+  </body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+  <style>
+    .line {
+      fill: none;
+      stroke: steelblue;
+      stroke-width: 1px;
+    }
+  </style>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>drawCursorChar2</title>
+  </head>
+  <body>
+    <button>点击发送请求</button>
+    <div id="wrapper"></div>
+    <script src="https://d3js.org/d3.v5.js"></script>
+    <script>
+      const btn = document.getElementsByTagName("button")[0];
+      btn.onclick = function () {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "http://127.0.0.1:3007/showLineChart2");
+        xhr.send();
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              let data = JSON.parse(xhr.response);
+              console.log(data); // 响应体
+              drawCursorChart();
+            }
+          } else {
+          }
+
+          async function drawCursorChart() {
+            const margin = {top: 10, right: 30, bottom: 30, left: 60},
+                width = 960 - margin.left - margin.right,
+                height = 800 - margin.top - margin.bottom;
+
+            const svg = d3.select("#wrapper")
+              .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+              .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+              d3.json("http://127.0.0.1:3007/showLineChart2").then(function(data) {
+                console.log(data)
+                var x = d3.scaleLinear()
+                  .domain(d3.extent(data,function(d){return d.date}))
+                  .range([ 0, width ]);
+                svg.append("g")
+                  .attr("transform", "translate(0," + height + ")")
+                  .call(d3.axisBottom(x));
+
+                // Add Y axis
+                var y = d3.scaleLinear()
+                  .domain(d3.extent(data,function(d){return d.Open}))
+                  .range([ height, 0 ]);
+                svg.append("g")
+                  .call(d3.axisLeft(y));
+
+                // This allows to find the closest X index of the mouse:
+                var bisect = d3.bisector(function(d) { return d.Open; }).left;
+
+                // Create the circle that travels along the curve of chart
+                var focus = svg
+                  .append('g')
+                  .append('circle')
+                    .style("fill", "none")
+                    .attr("stroke", "black")
+                    .attr('r', 8.5)
+                    .style("opacity", 0)
+
+                // Create the text that travels along the curve of chart
+                var focusText = svg
+                  .append('g')
+                  .append('text')
+                    .style("opacity", 0)
+                    .attr("text-anchor", "left")
+                    .attr("alignment-baseline", "middle")
+
+                // Add the line
+                svg
+                  .append("path")
+                  .datum(data)
+                  .attr("fill", "none")
+                  .attr("stroke", "steelblue")
+                  .attr("stroke-width", 1.5)
+                  .attr("d", d3.line()
+                    .x(function(d) { return x(d.x) })
+                    .y(function(d) { return y(d.y) })
+                    )
+
+                // Create a rect on top of the svg area: this rectangle recovers mouse position
+                svg
+                  .append('rect')
+                  .style("fill", "none")
+                  .style("pointer-events", "all")
+                  .attr('width', width)
+                  .attr('height', height)
+                  .on('mouseover', mouseover)
+                  .on('mousemove', mousemove)
+                  .on('mouseout', mouseout);
+
+
+                // What happens when the mouse move -> show the annotations at the right positions.
+                function mouseover() {
+                  focus.style("opacity", 1)
+                  focusText.style("opacity",1)
+                }
+
+                function mousemove() {
+                  // recover coordinate we need
+                  var x0 = x.invert(d3.mouse(this)[0]);
+                  var i = bisect(data, x0, 1);
+                  selectedData = data[i]
+                  focus
+                    .attr("cx", x(selectedData.x))
+                    .attr("cy", y(selectedData.y))
+                  focusText
+                    .html("x:" + selectedData.x + "  -  " + "y:" + selectedData.y)
+                    .attr("x", x(selectedData.x)+15)
+                    .attr("y", y(selectedData.y))
+                  }
+                function mouseout() {
+                  focus.style("opacity", 0)
+                  focusText.style("opacity", 0)
+                }
+              })
+          }
+        
+        };
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>drawScatter</title>
+    <style>
+      #result {
+        width: 200px;
+        height: 100px;
+        border: solid 1px #90b;
+      }
+    </style>
+  </head>
+  <body>
+    <button>点击发送请求</button>
+    <div id="wrapper"></div>
+    <!-- <div id="result"></div> -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script>
+      const btn = document.getElementsByTagName("button")[0];
+      //const result = document.getElementById("result");
+      btn.onclick = function () {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "http://127.0.0.1:3007/showScatter");
+        xhr.send();
+        // 4. 事件绑定 处理服务端返回的结果
+        xhr.onreadystatechange = function () {
+          // readyState 是 xhr 对象中的属性, 表示状态 0 1 2 3 4
+          //判断 (服务端返回了所有的结果)
+          if (xhr.readyState === 4) {
+            //判断响应状态码 200  404  403 401 500
+            if (xhr.status >= 200 && xhr.status < 300) {
+              let data = JSON.parse(xhr.response);
+              console.log(data); // 响应体
+              drawScatter();
+            }
+          } else {
+            //
+          }
+
+          async function drawScatter() {
+            var margin = {top: 10, right: 30, bottom: 30, left: 60},
+            width = 460 - margin.left - margin.right,
+            height = 400 - margin.top - margin.bottom;
+
+            var Svg = d3.select("#wrapper")
+            .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+                .attr("transform",
+                    "translate(" + margin.left + "," + margin.top + ")");
+
+            //Read the data
+            d3.json("http://127.0.0.1:3007/showScatter", function(data) {
+
+            // Add X axis
+            var x = d3.scaleLinear()
+                .domain(d3.extent(data,function(d){return d.a}))
+                .range([ 0, width ]);
+            var xAxis = Svg.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x));
+
+            // Add Y axis
+            var y = d3.scaleLinear()
+                .domain(d3.extent(data,function(d){return d.b}))
+                .range([ height, 0]);
+            Svg.append("g")
+                .call(d3.axisLeft(y));
+
+            // Add a clipPath: everything out of this area won't be drawn.
+            var clip = Svg.append("defs").append("svg:clipPath")
+                .attr("id", "clip")
+                .append("svg:rect")
+                .attr("width", width )
+                .attr("height", height )
+                .attr("x", 0)
+                .attr("y", 0);
+
+            // Color scale: give me a specie name, I return a color
+            // var color = d3.scaleOrdinal()
+            //     .domain(["setosa", "versicolor", "virginica" ])
+            //     .range([ "#440154ff", "#21908dff", "#fde725ff"])
+
+
+            // Add brushing
+            var brush = d3.brushX()                 // Add the brush feature using the d3.brush function
+                .extent( [ [0,0], [width,height] ] ) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
+                .on("end", updateChart) // Each time the brush selection changes, trigger the 'updateChart' function
+
+            // Create the scatter variable: where both the circles and the brush take place
+            var scatter = Svg.append('g')
+                .attr("clip-path", "url(#clip)")
+
+            // Add circles
+            scatter
+                .selectAll("circle")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("cx", function (d) { return x(d.a); } )
+                .attr("cy", function (d) { return y(d.b); } )
+                .attr("r", 2)
+                //.style("fill", function (d) { return color(d.Species) } )
+                .style("fill",'blue')
+                .style("opacity", 1)
+
+            // Add the brushing
+            scatter
+                .append("g")
+                .attr("class", "brush")
+                .call(brush);
+
+            // A function that set idleTimeOut to null
+            var idleTimeout
+            function idled() { idleTimeout = null; }
+
+            // A function that update the chart for given boundaries
+            function updateChart() {
+
+                extent = d3.event.selection
+
+                // If no selection, back to initial coordinate. Otherwise, update X axis domain
+                if(!extent){
+                if (!idleTimeout) return idleTimeout = setTimeout(idled, 350); // This allows to wait a little bit
+                    x.domain(d3.extent(data,function(d){return d.a}))
+                    //y.domain(d3.extent(data,function(d){return d.b}))
+                }else{
+                    x.domain([ x.invert(extent[0]), x.invert(extent[1]) ])
+                   // y.domain([ y.invert(extent[0][1]), y.invert(extent[1][1]) ])
+                    scatter.select(".brush").call(brush.move, null) // This remove the grey brush area as soon as the selection has been done
+                }
+
+                // Update axis and circle position
+                xAxis.transition().duration(1000).call(d3.axisBottom(x))
+                //yAxis.transition().duration(1000).call(d3.axisLeft(y))
+                scatter
+                .selectAll("circle")
+                .transition().duration(1000)
+                .attr("cx",function (d) { return x(d.a);})
+                .attr("cy",function (d) { return y(d.b);})
+
+
+                }
+            })
+          }
+
+        };
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=chrome" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>drawBar</title>
+    <style>
+      #result {
+        width: 200px;
+        height: 100px;
+        border: solid 1px #90b;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper"></div>
+    <script src="../d3.v5.js"></script>
+    <script src="./js/getBar_agg.js"></script>
+    <script>
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "http://127.0.0.1:3007/showBar_agg");
+        xhr.send();
+        // 4. 事件绑定 处理服务端返回的结果
+        xhr.onreadystatechange = function () {
+          // readyState 是 xhr 对象中的属性, 表示状态 0 1 2 3 4
+          if (xhr.readyState === 4) {
+            //判断响应状态码 200  404  403 401 500
+            if (xhr.status >= 200 && xhr.status < 300) {
+              //console.log(xhr.response)
+              let data = JSON.parse(xhr.response);
+              console.log(data); // 响应体
+              drawBar_agg();
+            }
+            //result.innerHTML = xhr.response;
+          } else {
+            //
+          }
+      };
+    </script>
+  </body>
+</html>

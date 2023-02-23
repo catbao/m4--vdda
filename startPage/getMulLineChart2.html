@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <style>
+    .line {
+      fill: none;
+      stroke: steelblue;
+      stroke-width: 1px;
+    }
+  </style>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>drawMulLineChart2</title>
+  </head>
+  <body>
+    <button>点击发送请求</button>
+    <div id="wrapper"></div>
+    <script src="https://d3js.org/d3.v6.js"></script>
+    <script>
+      const btn = document.getElementsByTagName("button")[0];
+      btn.onclick = function () {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", "http://127.0.0.1:3007/showMulLineChart2");
+        xhr.send();
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              let data = JSON.parse(xhr.response);
+              console.log(data); // 响应体
+              drawMulLineChart2();
+            }
+          } else {
+          }
+
+          async function drawMulLineChart2() {
+            const margin = {top: 10, right: 30, bottom: 30, left: 60},
+                width = 960 - margin.left - margin.right,
+                height = 800 - margin.top - margin.bottom;
+
+            const svg = d3.select("#wrapper")
+              .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+              .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            d3.json("http://127.0.0.1:3007/showMulLineChart2").then( function(data) {
+
+              const sumstat = d3.group(data, d => d.name); // nest function allows to group the calculation per level of a factor
+              const x = d3.scaleLinear()
+                .domain(d3.extent(data, function(d) { return d.time; }))
+                .range([ 0, width ]);
+              svg.append("g")
+                .attr("transform", `translate(0, ${height})`)
+                .call(d3.axisBottom(x).ticks(5));
+
+              const y = d3.scaleLinear()
+                .domain([0, d3.max(data, function(d) { return +d.h; })])
+                .range([ height, 0 ]);
+              svg.append("g")
+                .call(d3.axisLeft(y));
+
+              const color = d3.scaleOrdinal()
+                .range(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999'])
+
+              svg.selectAll(".line")
+                  .data(sumstat)
+                  .join("path")
+                    .attr("fill", "none")
+                    .attr("stroke", function(d){ return color(d[0]) })
+                    .attr("stroke-width", 1.5)
+                    .attr("d", function(d){
+                      return d3.line()
+                        .x(function(d) { return x(d.time); })
+                        .y(function(d) { return y(+d.h); })
+                        (d[1])
+                    })
+            })
+          }
+        
+        };
+      };
+    </script>
+  </body>
+</html>
